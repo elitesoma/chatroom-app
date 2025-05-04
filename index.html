@@ -1,161 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>AI Chat Bot</title>
+<style>
+  /* Modern clean style for the chat app */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
-        canvas {
-            border: 1px solid #000;
-        }
-
-        .game-over {
-            font-size: 32px;
-            font-weight: bold;
-            color: red;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .restart-btn {
-            display: block;
-            margin-top: 20px;
-            padding: 10px;
-            background-color: green;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .restart-btn:hover {
-            background-color: darkgreen;
-        }
-    </style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: #f5f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  #chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 360px;
+    max-width: 100vw;
+    height: 600px;
+    max-height: 100vh;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  #chat-header {
+    background: #4f46e5;
+    color: white;
+    padding: 16px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+    user-select: none;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 1rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+  .message.user {
+    background: #4f46e5;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .message.bot {
+    background: #e5e7eb;
+    color: #111827;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  #input-area {
+    display: flex;
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+  #input-area input[type="text"] {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 24px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  #input-area input[type="text"]:focus {
+    border-color: #4f46e5;
+  }
+  #input-area button {
+    background: #4f46e5;
+    border: none;
+    border-radius: 24px;
+    margin-left: 12px;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #input-area button:disabled {
+    background: #a5b4fc;
+    cursor: not-allowed;
+  }
+  #input-area button:hover:not(:disabled) {
+    background: #3730a3;
+  }
+  /* Scrollbar styling for messages */
+  #messages::-webkit-scrollbar {
+    width: 8px;
+  }
+  #messages::-webkit-scrollbar-thumb {
+    background-color: #a5b4fc;
+    border-radius: 4px;
+  }
+  /* Mobile adjustments */
+  @media (max-width: 400px) {
+    #chat-container {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+    }
+  }
+</style>
 </head>
 <body>
-
-<canvas id="gameCanvas" width="400" height="400"></canvas>
-<div class="game-over" id="gameOverMessage" style="display: none;">Game Over!</div>
-<button class="restart-btn" id="restartBtn" style="display: none;">Restart</button>
+  <div id="chat-container" role="main" aria-label="AI Chat">
+    <header id="chat-header">AI Chat Bot</header>
+    <section id="messages" aria-live="polite" aria-relevant="additions"></section>
+    <form id="input-area" autocomplete="off" aria-label="Send message">
+      <input id="user-input" type="text" placeholder="Type your message…" aria-label="Message input" required />
+      <button type="submit" id="send-btn" aria-label="Send message">Send</button>
+    </form>
+  </div>
 
 <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+  (function() {
+    const messagesContainer = document.getElementById('messages');
+    const form = document.getElementById('input-area');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
 
-    const box = 20;
-    const canvasSize = 400;
-    const snakeColor = "green";
-    const foodColor = "red";
-
-    let snake = [{ x: 9 * box, y: 10 * box }];
-    let food = {
-        x: Math.floor(Math.random() * 20) * box,
-        y: Math.floor(Math.random() * 20) * box
-    };
-    let direction;
-    let score = 0;
-    let gameOver = false;
-
-    document.addEventListener("keydown", changeDirection);
-
-    function changeDirection(event) {
-        if (event.keyCode === 37 && direction !== "RIGHT") {
-            direction = "LEFT";
-        } else if (event.keyCode === 38 && direction !== "DOWN") {
-            direction = "UP";
-        } else if (event.keyCode === 39 && direction !== "LEFT") {
-            direction = "RIGHT";
-        } else if (event.keyCode === 40 && direction !== "UP") {
-            direction = "DOWN";
-        }
+    function appendMessage(text, sender) {
+      const messageElem = document.createElement('div');
+      messageElem.classList.add('message', sender);
+      messageElem.textContent = text;
+      messagesContainer.appendChild(messageElem);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    function draw() {
-        if (gameOver) {
-            document.getElementById("gameOverMessage").style.display = "block";
-            document.getElementById("restartBtn").style.display = "block";
-            return;
-        }
+    async function getBotResponse(message) {
+      // Using public API from affiliateplus.xyz for demo purposes
+      // API url format: https://api.affiliateplus.xyz/api/chatbot?message=hello&botname=AI&ownername=User&user=1
+      // This API has rate limits and sometimes can be offline, fallback to simple canned responses
 
-        ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-        for (let i = 0; i < snake.length; i++) {
-            ctx.fillStyle = snakeColor;
-            ctx.fillRect(snake[i].x, snake[i].y, box, box);
-        }
-
-        ctx.fillStyle = foodColor;
-        ctx.fillRect(food.x, food.y, box, box);
-
-        let snakeX = snake[0].x;
-        let snakeY = snake[0].y;
-
-        if (direction === "LEFT") snakeX -= box;
-        if (direction === "UP") snakeY -= box;
-        if (direction === "RIGHT") snakeX += box;
-        if (direction === "DOWN") snakeY += box;
-
-        if (snakeX === food.x && snakeY === food.y) {
-            score++;
-            food = {
-                x: Math.floor(Math.random() * 20) * box,
-                y: Math.floor(Math.random() * 20) * box
-            };
+      const encodedMessage = encodeURIComponent(message);
+      const url = `https://api.affiliateplus.xyz/api/chatbot?message=${encodedMessage}&botname=AI&ownername=You&user=1`;
+      
+      try {
+        const response = await fetch(url);
+        if(!response.ok) throw new Error("API unreachable");
+        const data = await response.json();
+        if(data && data.message) {
+          return data.message;
         } else {
-            snake.pop();
+          return "Sorry, I couldn't process that.";
         }
-
-        let newHead = { x: snakeX, y: snakeY };
-        snake.unshift(newHead);
-
-        if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize || collision(snakeX, snakeY)) {
-            gameOver = true;
-        }
+      } catch (e) {
+        // Fallback simple AI response
+        const fallbackReplies = [
+          "I’m not sure how to respond to that.",
+          "Could you please rephrase?",
+          "Sorry, I’m having trouble thinking right now.",
+          "Let's try something else!"
+        ];
+        return fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      }
     }
 
-    function collision(x, y) {
-        for (let i = 1; i < snake.length; i++) {
-            if (x === snake[i].x && y === snake[i].y) {
-                return true;
-            }
-        }
-        return false;
-    }
+    form.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const userMessage = input.value.trim();
+      if (userMessage === '') return;
 
-    function restartGame() {
-        snake = [{ x: 9 * box, y: 10 * box }];
-        direction = null;
-        score = 0;
-        gameOver = false;
-        document.getElementById("gameOverMessage").style.display = "none";
-        document.getElementById("restartBtn").style.display = "none";
-        gameLoop();
-    }
+      appendMessage(userMessage, 'user');
+      input.value = '';
+      input.disabled = true;
+      sendBtn.disabled = true;
 
-    document.getElementById("restartBtn").addEventListener("click", restartGame);
+      appendMessage("Typing...", 'bot');
+      const typingMsg = messagesContainer.lastChild;
 
-    function gameLoop() {
-        if (!gameOver) {
-            draw();
-            setTimeout(gameLoop, 100);
-        }
-    }
+      const botReply = await getBotResponse(userMessage);
 
-    gameLoop();
+      // Remove "Typing..." placeholder and add the real bot message
+      messagesContainer.removeChild(typingMsg);
+      appendMessage(botReply, 'bot');
+
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    });
+
+    // Focus on input on load
+    input.focus();
+  })();
 </script>
-
 </body>
 </html>
+
+
