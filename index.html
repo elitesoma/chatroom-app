@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Simple Chat Bot</title>
+<title>Simple Rule-Based Chat Bot</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
   html, body {
@@ -98,4 +98,103 @@
   }
   #input-area button:disabled {
     background: #a5b4fc;
-    cursor:
+    cursor: not-allowed;
+  }
+  #input-area button:hover:not(:disabled) {
+    background: #3730a3;
+  }
+  /* Scrollbar styling for messages */
+  #messages::-webkit-scrollbar {
+    width: 8px;
+  }
+  #messages::-webkit-scrollbar-thumb {
+    background-color: #a5b4fc;
+    border-radius: 4px;
+  }
+  /* Mobile adjustments */
+  @media (max-width: 400px) {
+    #chat-container {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="chat-container" role="main" aria-label="Simple Rule-Based Chat Bot">
+    <header id="chat-header">Simple Chat Bot</header>
+    <section id="messages" aria-live="polite" aria-relevant="additions"></section>
+    <form id="input-area" autocomplete="off" aria-label="Send message">
+      <input id="user-input" type="text" placeholder="Type your message…" aria-label="Message input" required />
+      <button type="submit" id="send-btn" aria-label="Send message">Send</button>
+    </form>
+  </div>
+
+<script>
+  (function() {
+    const messagesContainer = document.getElementById('messages');
+    const form = document.getElementById('input-area');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // Simple rule-based responses
+    function getBotReply(message) {
+      // Normalize and lower case the message for matching
+      const msg = message.toLowerCase().trim();
+
+      // Define simple keyword-response pairs
+      const responses = [
+        { keywords: ['hi', 'hello', 'hey'], reply: "Hello! How can I help you today?" },
+        { keywords: ['how are you', 'how are you doing'], reply: "I'm just a bot, but I'm doing great! Thanks for asking." },
+        { keywords: ['what is your name', 'who are you'], reply: "I'm a simple rule-based chatbot." },
+        { keywords: ['bye', 'goodbye', 'see you'], reply: "Goodbye! Have a nice day!" },
+        { keywords: ['help', 'support'], reply: "How can I assist you today?" },
+      ];
+
+      for (const entry of responses) {
+        for (const keyword of entry.keywords) {
+          if (msg.includes(keyword)) {
+            return entry.reply;
+          }
+        }
+      }
+      return "Sorry, I don't understand that. Can you try rephrasing?";
+    }
+
+    function appendMessage(text, sender) {
+      const messageElem = document.createElement('div');
+      messageElem.classList.add('message', sender);
+      messageElem.textContent = text;
+      messagesContainer.appendChild(messageElem);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const userMessage = input.value.trim();
+      if (userMessage === '') return;
+
+      appendMessage(userMessage, 'user');
+      input.value = '';
+      sendBtn.disabled = true;
+      input.disabled = true;
+
+      setTimeout(() => {
+        const botReply = getBotReply(userMessage);
+        appendMessage(botReply, 'bot');
+        input.disabled = false;
+        sendBtn.disabled = false;
+        input.focus();
+      }, 500); // Simulate typing delay
+    });
+
+    // Initial greeting
+    appendMessage("Hi! I'm your friendly chat bot. How can I assist you?", 'bot');
+    input.focus();
+
+  })();
+</script>
+</body>
+</html>
+
