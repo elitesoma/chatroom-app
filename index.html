@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        canvas {
+            border: 1px solid #000;
+        }
+
+        .game-over {
+            font-size: 32px;
+            font-weight: bold;
+            color: red;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .restart-btn {
+            display: block;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .restart-btn:hover {
+            background-color: darkgreen;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<div class="game-over" id="gameOverMessage" style="display: none;">Game Over!</div>
+<button class="restart-btn" id="restartBtn" style="display: none;">Restart</button>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const box = 20;
+    const canvasSize = 400;
+    const snakeColor = "green";
+    const foodColor = "red";
+
+    let snake = [{ x: 9 * box, y: 10 * box }];
+    let food = {
+        x: Math.floor(Math.random() * 20) * box,
+        y: Math.floor(Math.random() * 20) * box
+    };
+    let direction;
+    let score = 0;
+    let gameOver = false;
+
+    document.addEventListener("keydown", changeDirection);
+
+    function changeDirection(event) {
+        if (event.keyCode === 37 && direction !== "RIGHT") {
+            direction = "LEFT";
+        } else if (event.keyCode === 38 && direction !== "DOWN") {
+            direction = "UP";
+        } else if (event.keyCode === 39 && direction !== "LEFT") {
+            direction = "RIGHT";
+        } else if (event.keyCode === 40 && direction !== "UP") {
+            direction = "DOWN";
+        }
+    }
+
+    function draw() {
+        if (gameOver) {
+            document.getElementById("gameOverMessage").style.display = "block";
+            document.getElementById("restartBtn").style.display = "block";
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+        for (let i = 0; i < snake.length; i++) {
+            ctx.fillStyle = snakeColor;
+            ctx.fillRect(snake[i].x, snake[i].y, box, box);
+        }
+
+        ctx.fillStyle = foodColor;
+        ctx.fillRect(food.x, food.y, box, box);
+
+        let snakeX = snake[0].x;
+        let snakeY = snake[0].y;
+
+        if (direction === "LEFT") snakeX -= box;
+        if (direction === "UP") snakeY -= box;
+        if (direction === "RIGHT") snakeX += box;
+        if (direction === "DOWN") snakeY += box;
+
+        if (snakeX === food.x && snakeY === food.y) {
+            score++;
+            food = {
+                x: Math.floor(Math.random() * 20) * box,
+                y: Math.floor(Math.random() * 20) * box
+            };
+        } else {
+            snake.pop();
+        }
+
+        let newHead = { x: snakeX, y: snakeY };
+        snake.unshift(newHead);
+
+        if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize || collision(snakeX, snakeY)) {
+            gameOver = true;
+        }
+    }
+
+    function collision(x, y) {
+        for (let i = 1; i < snake.length; i++) {
+            if (x === snake[i].x && y === snake[i].y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function restartGame() {
+        snake = [{ x: 9 * box, y: 10 * box }];
+        direction = null;
+        score = 0;
+        gameOver = false;
+        document.getElementById("gameOverMessage").style.display = "none";
+        document.getElementById("restartBtn").style.display = "none";
+        gameLoop();
+    }
+
+    document.getElementById("restartBtn").addEventListener("click", restartGame);
+
+    function gameLoop() {
+        if (!gameOver) {
+            draw();
+            setTimeout(gameLoop, 100);
+        }
+    }
+
+    gameLoop();
+</script>
+
+</body>
+</html>
