@@ -1,113 +1,63 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const chatMessages = document.getElementById('chat-messages');
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-    
-    // Add initial greeting
-    addBotMessage("Hello! I'm ChatGPT. How can I help you today?");
-    
-    // Event listeners with better error handling
-    sendButton.addEventListener('click', handleSendMessage);
-    userInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') handleSendMessage();
+// Simple in-memory storage for messages (will reset on page refresh)
+let messages = [];
+let username = 'Anonymous';
+
+// DOM elements
+const messagesContainer = document.getElementById('messages');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-button');
+const usernameInput = document.getElementById('username-input');
+
+// Load saved username if exists
+if (localStorage.getItem('chatUsername')) {
+    username = localStorage.getItem('chatUsername');
+    usernameInput.value = username;
+}
+
+// Display all messages
+function displayMessages() {
+    messagesContainer.innerHTML = '';
+    messages.forEach(msg => {
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        messageElement.innerHTML = `
+            <div class="username">${msg.username}</div>
+            <div class="text">${msg.text}</div>
+            <div class="time">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+        `;
+        messagesContainer.appendChild(messageElement);
     });
-    
-    async function handleSendMessage() {
-        try {
-            const message = userInput.value.trim();
-            if (!message) {
-                alert("Please enter a message");
-                return;
-            }
-            
-            addUserMessage(message);
-            userInput.value = '';
-            userInput.disabled = true;
-            sendButton.disabled = true;
-            
-            const loadingId = showLoading();
-            
-            // Using a free proxy to OpenAI (for testing only)
-            const response = await fetchChatGPTResponse(message);
-            addBotMessage(response);
-            
-        } catch (error) {
-            console.error('Chat Error:', error);
-            addBotMessage("Error: " + error.message);
-        } finally {
-            removeLoading(loadingId);
-            userInput.disabled = false;
-            sendButton.disabled = false;
-            userInput.focus();
-        }
-    }
-    
-    async function fetchChatGPTResponse(message) {
-        // TESTING OPTION 1: Free temporary proxy (limited use)
-        const testResponse = await fetch("https://chatgpt-api.shn.hk/v1/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [{role: "user", content: message}]
-            })
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Send a new message
+function sendMessage() {
+    const text = messageInput.value.trim();
+    if (text) {
+        messages.push({
+            username: username,
+            text: text,
+            timestamp: new Date().getTime()
         });
+        messageInput.value = '';
+        displayMessages();
         
-        if (!testResponse.ok) {
-            throw new Error("Failed to get response");
-        }
-        
-        const data = await testResponse.json();
-        return data.choices[0].message.content;
-        
-        /* 
-        // PRODUCTION OPTION 2: Your own backend
-        const response = await fetch('YOUR_BACKEND_ENDPOINT', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
-        });
-        
-        if (!response.ok) throw new Error('API Error');
-        return await response.json();
-        */
+        // For a real app, you would send to a server here
     }
-    
-    // UI Helper Functions (same as before)
-    function addUserMessage(message) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', 'user-message');
-        messageElement.textContent = message;
-        chatMessages.appendChild(messageElement);
-        scrollToBottom();
-    }
-    
-    function addBotMessage(message) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', 'bot-message');
-        messageElement.textContent = message;
-        chatMessages.appendChild(messageElement);
-        scrollToBottom();
-    }
-    
-    function showLoading() {
-        const loadingElement = document.createElement('div');
-        loadingElement.classList.add('message', 'bot-message');
-        loadingElement.id = 'loading-' + Date.now();
-        loadingElement.innerHTML = 'Thinking <span class="loading"></span>';
-        chatMessages.appendChild(loadingElement);
-        scrollToBottom();
-        return loadingElement.id;
-    }
-    
-    function removeLoading(id) {
-        const element = document.getElementById(id);
-        if (element) element.remove();
-    }
-    
-    function scrollToBottom() {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Event listeners
+sendButton.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendMessage();
     }
 });
+
+usernameInput.addEventListener('change', () => {
+    username = usernameInput.value.trim() || 'Anonymous';
+    localStorage.setItem('chatUsername', username);
+});
+
+// Initial display
+displayMessages();
