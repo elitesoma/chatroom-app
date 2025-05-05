@@ -3,27 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Interface</title>
+    <title>Community Chat</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="chat-container">
-        <header class="chat-header">
-            <h1>ChatGPT</h1>
-            <p>Powered by OpenAI</p>
-        </header>
-        
-        <div class="chat-messages" id="chat-messages">
-            <!-- Messages will appear here -->
-        </div>
-        
-        <div class="chat-input">
-            <input type="text" id="user-input" placeholder="Type your message here..." autofocus>
+        <h1>Community Chat</h1>
+        <div id="messages" class="messages"></div>
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="Type your message...">
             <button id="send-button">Send</button>
         </div>
+        <div class="user-area">
+            <input type="text" id="username-input" placeholder="Your username">
+        </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
