@@ -1,63 +1,49 @@
-// Simple in-memory storage for messages (will reset on page refresh)
-let messages = [];
-let username = 'Anonymous';
+const corsProxy = 'https://api.allorigins.win/get?url='; // free public CORS proxy
 
-// DOM elements
-const messagesContainer = document.getElementById('messages');
-const messageInput = document.getElementById('message-input');
-const sendButton = document.getElementById('send-button');
-const usernameInput = document.getElementById('username-input');
+const form = document.getElementById('proxyForm');
+const urlInput = document.getElementById('urlInput');
+const contentFrame = document.getElementById('contentFrame');
+const errorMsg = document.getElementById('errorMsg');
 
-// Load saved username if exists
-if (localStorage.getItem('chatUsername')) {
-    username = localStorage.getItem('chatUsername');
-    usernameInput.value = username;
-}
+form.addEventListener('submit', function(event) {
+  event.preventDefault();
+  errorMsg.textContent = '';
+  let targetUrl = urlInput.value.trim();
 
-// Display all messages
-function displayMessages() {
-    messagesContainer.innerHTML = '';
-    messages.forEach(msg => {
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-        messageElement.innerHTML = `
-            <div class="username">${msg.username}</div>
-            <div class="text">${msg.text}</div>
-            <div class="time">${new Date(msg.timestamp).toLocaleTimeString()}</div>
-        `;
-        messagesContainer.appendChild(messageElement);
+  if (!targetUrl) {
+    errorMsg.textContent = 'Please enter a valid URL.';
+    return;
+  }
+
+  try {
+    const urlObj = new URL(targetUrl); // Validate URL format
+    fetchContentCorsProxy(targetUrl);
+  } catch (e) {
+    errorMsg.textContent = 'Invalid URL format.';
+  }
+});
+
+function fetchContentCorsProxy(url) {
+  const encodedUrl = encodeURIComponent(url);
+  fetch(corsProxy + encodedUrl)
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to fetch content via proxy.');
+      return response.json();
+    })
+    .then(data => {
+      if (data && data.contents) {
+        // Create a Blob URL for inline loading in iframe
+        const blob = new Blob([data.contents], {type: 'text/html'});
+        const blobUrl = URL.createObjectURL(blob);
+        contentFrame.src = blobUrl;
+      } else {
+        throw new Error('No content returned from proxy.');
+      }
+    })
+    .catch(error => {
+      errorMsg.textContent = 'Error loading content: ' + error.message + 
+        ' You may try another URL or check your internet connection.';
+      contentFrame.src = 'about:blank';
     });
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Send a new message
-function sendMessage() {
-    const text = messageInput.value.trim();
-    if (text) {
-        messages.push({
-            username: username,
-            text: text,
-            timestamp: new Date().getTime()
-        });
-        messageInput.value = '';
-        displayMessages();
-        
-        // For a real app, you would send to a server here
-    }
-}
-
-// Event listeners
-sendButton.addEventListener('click', sendMessage);
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
-usernameInput.addEventListener('change', () => {
-    username = usernameInput.value.trim() || 'Anonymous';
-    localStorage.setItem('chatUsername', username);
-});
-
-// Initial display
-displayMessages();
