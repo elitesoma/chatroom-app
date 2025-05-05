@@ -22,7 +22,7 @@ body {
 }
 
 .chat-header {
-    background-color: #6200ee;
+    background-color: #10a37f;
     color: white;
     padding: 20px;
     text-align: center;
@@ -58,7 +58,7 @@ body {
 
 .user-message {
     align-self: flex-end;
-    background-color: #6200ee;
+    background-color: #10a37f;
     color: white;
     border-bottom-right-radius: 5px;
 }
@@ -89,7 +89,7 @@ body {
 #send-button {
     margin-left: 10px;
     padding: 12px 20px;
-    background-color: #6200ee;
+    background-color: #10a37f;
     color: white;
     border: none;
     border-radius: 25px;
@@ -99,10 +99,9 @@ body {
 }
 
 #send-button:hover {
-    background-color: #3700b3;
+    background-color: #0d8a6a;
 }
 
-/* Loading indicator */
 .loading {
     display: inline-block;
     width: 20px;
@@ -111,13 +110,13 @@ body {
     border-radius: 50%;
     border-top-color: #fff;
     animation: spin 1s ease-in-out infinite;
+    margin-left: 10px;
 }
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 
-/* Responsive adjustments */
 @media (max-width: 600px) {
     .chat-container {
         width: 100%;
