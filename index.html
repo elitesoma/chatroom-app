@@ -1,15 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>GitHub Chatroom</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>GitHub Repository Proxy Viewer</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="chat-container">
-        <div id="messages"></div>
-        <input type="text" id="message-input" placeholder="Type your message...">
-        <button id="send-button">Send</button>
-    </div>
-    <script src="app.js"></script>
+<header>GitHub Repository Proxy Viewer</header>
+<main>
+  <form id="proxyForm">
+    <input type="text" id="urlInput" placeholder="Enter GitHub Pages or repo URL" 
+           value="https://github.com/" aria-label="URL input" />
+    <button type="submit">Load</button>
+  </form>
+  <div id="errorMsg"></div>
+  <iframe id="contentFrame" sandbox="allow-scripts allow-same-origin" 
+          title="Proxy Content Frame"></iframe>
+</main>
+
+<script src="script.js"></script>
 </body>
 </html>
+
